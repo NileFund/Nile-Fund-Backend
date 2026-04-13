@@ -1,0 +1,17 @@
+#Environment variables
+.env
+.env.*
+
+#Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+#Virtual Environment
+venv/
+env/
+ENV/
+
+# Media and Static
+/static/
+/media/
