@@ -41,8 +41,8 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
     # Optional profile extras 
     birthdate       = models.DateField(blank=True, null=True)
-    facebook_profile = models.URLField(blank=True)
-    country         = models.CharField(max_length=60, blank=True)
+    facebook_profile = models.URLField(blank=True,null=True)
+    country         = models.CharField(max_length=60, blank=True,null=True)
 
     # Auth flags 
     is_active  = models.BooleanField(default=False)   

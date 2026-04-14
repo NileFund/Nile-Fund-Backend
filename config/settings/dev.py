@@ -1,5 +1,6 @@
 from .base import *  
 from decouple import config
+
 #  Security 
 SECRET_KEY = 'django-insecure-%dh*gef#-z6m^)jhy58(@7zlk)%91exs%4v*-o7u5@b5fcat(s'
 DEBUG       = True
