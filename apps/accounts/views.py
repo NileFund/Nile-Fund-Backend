@@ -8,6 +8,7 @@ from django.core.mail import EmailMessage
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
 
@@ -66,3 +67,24 @@ class UserProfileView(views.APIView):
     def get(self, request):
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class LogoutView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            
+            token.blacklist()
+
+            return Response(
+                {"message": "Logged out successfully. Token blacklisted."}, 
+                status=status.HTTP_205_RESET_CONTENT
+            )
+        except Exception:
+            return Response(
+                {"error": "Invalid token or already logged out."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
