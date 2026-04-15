@@ -23,6 +23,7 @@ THIRD_PARTY_APPS = [
     'cloudinary_storage',
     'cloudinary',
     'rest_framework',
+    'django_filters',
     'rest_framework_simplejwt.token_blacklist',
     'django_rest_passwordreset',
 ]

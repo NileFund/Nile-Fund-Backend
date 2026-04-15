@@ -2,10 +2,21 @@ from rest_framework import serializers
 from django.db.models import Sum
 from .models import Donation
 from apps.projects.models import Project
+from apps.accounts.models import User
 
 
+class UserMiniSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'full_name', 'profile_picture']
+
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
+    
 class DonationSerializer(serializers.ModelSerializer):
-    donor = serializers.StringRelatedField(read_only=True)
+    donor = UserMiniSerializer(read_only=True)
 
     class Meta:
         model = Donation
