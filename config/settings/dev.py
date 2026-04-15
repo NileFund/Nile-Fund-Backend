@@ -17,5 +17,25 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     }
 }
-# ── Email  print to console, no SMTP needed 
+INSTALLED_APPS += [
+   
+]
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
