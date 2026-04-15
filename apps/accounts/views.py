@@ -6,14 +6,16 @@ from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.contrib.auth.tokens import default_token_generator
-from .serializers import UserRegistrationSerializer
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from .serializers import UserRegistrationSerializer, UserProfileSerializer
 
 User = get_user_model()
 
 class RegisterView(views.APIView):
     permission_classes = [AllowAny]
+    
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -25,6 +27,7 @@ class RegisterView(views.APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             
+            # Frontend (React)
             activation_link = f"http://localhost:5173/activate/{uid}/{token}/"
             
             message = f"Hi {user.first_name},\n\nPlease click on the link below to activate your account:\n{activation_link}\n\nThis link will expire in 24 hours."
@@ -40,6 +43,8 @@ class RegisterView(views.APIView):
     
     
 class ActivateAccountView(views.APIView):
+    permission_classes = [AllowAny]
+    
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -53,3 +58,11 @@ class ActivateAccountView(views.APIView):
             return Response({"message": "Account activated successfully!"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Activation link is invalid or expired!"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
