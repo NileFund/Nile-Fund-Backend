@@ -24,6 +24,8 @@ THIRD_PARTY_APPS = [
     'cloudinary',
     'rest_framework',
     'django_filters',
+    'rest_framework_simplejwt.token_blacklist',
+    'django_rest_passwordreset',
 ]
 
 LOCAL_APPS = [
@@ -111,7 +113,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),   
-    'ROTATE_REFRESH_TOKENS': False,
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': os.getenv("SECRET_KEY", "django-insecure-fallback"),
     'AUTH_HEADER_TYPES': ('Bearer',), 
