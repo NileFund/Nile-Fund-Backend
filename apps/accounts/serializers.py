@@ -30,7 +30,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')
-        
         user = User.objects.create_user(**validated_data)
         return user
     
@@ -45,3 +44,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             'profile_picture': self.user.profile_picture.url if self.user.profile_picture else None,
         }
         return data
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'profile_picture']
+        read_only_fields = ['email']
