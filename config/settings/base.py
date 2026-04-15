@@ -95,4 +95,5 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+    'EXCEPTION_HANDLER': 'apps.common.exceptions.custom_exception_handler',
 }

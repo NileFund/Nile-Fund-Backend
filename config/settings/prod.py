@@ -2,6 +2,7 @@ import os
 from .base import * 
 from decouple import config
 import dj_database_url
+
 #  Security 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']   
 DEBUG       = False
