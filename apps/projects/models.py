@@ -45,15 +45,19 @@ class Project(TimeStampedModel):
         decimal_places=2,
         validators=[MinValueValidator(1, message='Target must be at least 1 EGP.')],
     )
-    start_time   = models.DateTimeField(validators=[validate_not_in_past])
-    end_time     = models.DateTimeField(validators=[validate_future_date])
-    is_cancelled = models.BooleanField(default=False)
-    is_featured  = models.BooleanField(default=False)
+    start_time = models.DateTimeField(validators=[validate_not_in_past])
+    end_time   = models.DateTimeField(validators=[validate_future_date])
+    status     = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    is_featured = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'projects_project'
         indexes  = [
-            models.Index(fields=['is_cancelled']),
+            models.Index(fields=['status']),
             models.Index(fields=['category']),
             models.Index(fields=['-created_at']),
         ]
@@ -62,19 +66,19 @@ class Project(TimeStampedModel):
         if self.start_time and self.end_time and self.end_time <= self.start_time:
             raise ValidationError({'end_time': 'End time must be after start time.'})
 
+    def save(self, *args, **kwargs):
+        if self.status != self.Status.CANCELLED:
+            now = timezone.now()
+            if now < self.start_time:
+                self.status = self.Status.PENDING
+            elif now <= self.end_time:
+                self.status = self.Status.RUNNING
+            else:
+                self.status = self.Status.COMPLETED
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
-
-    @property
-    def status(self):
-        if self.is_cancelled:
-            return self.Status.CANCELLED
-        now = timezone.now()
-        if now < self.start_time:
-            return self.Status.PENDING
-        if now <= self.end_time:
-            return self.Status.RUNNING
-        return self.Status.COMPLETED
 
     @property
     def total_donated(self):
