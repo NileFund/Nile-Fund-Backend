@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/ratings/', include('apps.ratings.urls')),
     path('api/reports/', include('apps.reports.urls')),
     path('api/accounts/', include('apps.accounts.urls')),
+    path('api/comments/', include('apps.comments.urls')),
     path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]
 
