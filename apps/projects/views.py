@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,24 +13,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        now = timezone.now()
         qs = (
             Project.objects
             .select_related('owner', 'category')
             .prefetch_related('tags', 'pictures')
             .order_by('-created_at')
         )
-
-        # Filter by status using time — no stored status field needed
         status_param = self.request.query_params.get('status')
-        if status_param == 'pending':
-            qs = qs.filter(is_cancelled=False, start_time__gt=now)
-        elif status_param == 'running':
-            qs = qs.filter(is_cancelled=False, start_time__lte=now, end_time__gte=now)
-        elif status_param == 'completed':
-            qs = qs.filter(is_cancelled=False, end_time__lt=now)
-        elif status_param == 'cancelled':
-            qs = qs.filter(is_cancelled=True)
+        if status_param:
+            qs = qs.filter(status=status_param)
 
         category_id = self.request.query_params.get('category')
         if category_id:
@@ -49,7 +39,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if project.owner != request.user:
             return Response({'message': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
-        if project.is_cancelled:
+        if project.status == Project.Status.CANCELLED:
             return Response({'message': 'Project is already cancelled'}, status=status.HTTP_400_BAD_REQUEST)
 
         if project.status == Project.Status.COMPLETED:
@@ -61,6 +51,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        project.is_cancelled = True
-        project.save(update_fields=['is_cancelled'])
+        project.status = Project.Status.CANCELLED
+        project.save(update_fields=['status'])
         return Response({'message': 'Project cancelled successfully'})

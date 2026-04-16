@@ -9,11 +9,10 @@ class ProjectPictureInline(admin.TabularInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'owner', 'category', 'status', 'is_featured', 'is_cancelled', 'total_target', 'created_at']
-    list_filter = ['is_cancelled', 'is_featured', 'category']
+    list_display = ['title', 'owner', 'category', 'status', 'is_featured', 'total_target', 'created_at']
+    list_filter = ['status', 'is_featured', 'category']
     search_fields = ['title', 'owner__email']
-    list_editable = ['is_featured', 'is_cancelled']
-    readonly_fields = ['status']
+    list_editable = ['is_featured', 'status']
     inlines = [ProjectPictureInline]
 
 
