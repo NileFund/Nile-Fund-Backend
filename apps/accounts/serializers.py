@@ -48,5 +48,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'profile_picture']
+        fields = [
+            'id', 'first_name', 'last_name', 'email', 'phone', 
+            'profile_picture', 'birthdate', 'facebook_profile', 'country'
+        ]
         read_only_fields = ['email']
