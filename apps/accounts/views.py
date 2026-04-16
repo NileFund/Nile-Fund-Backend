@@ -9,6 +9,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
 
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
 
@@ -28,8 +29,8 @@ class RegisterView(views.APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             
-            # Frontend (React)
-            activation_link = f"http://localhost:5173/activate/{uid}/{token}/"
+            # Frontend: fixed the hared codded http://localhost:5173 , Dynamically pulled from settings!
+            activation_link = f"{settings.FRONTEND_URL}/activate/{uid}/{token}/"
             
             message = f"Hi {user.first_name},\n\nPlease click on the link below to activate your account:\n{activation_link}\n\nThis link will expire in 24 hours."
             
