@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.common.models import TimeStampedModel
 from apps.common.validators import validate_not_in_past, validate_future_date
@@ -44,19 +45,15 @@ class Project(TimeStampedModel):
         decimal_places=2,
         validators=[MinValueValidator(1, message='Target must be at least 1 EGP.')],
     )
-    start_time = models.DateTimeField(validators=[validate_not_in_past])
-    end_time   = models.DateTimeField(validators=[validate_future_date])
-    status     = models.CharField(
-        max_length=10,
-        choices=Status.choices,
-        default=Status.PENDING,
-    )
-    is_featured = models.BooleanField(default=False)   
+    start_time   = models.DateTimeField(validators=[validate_not_in_past])
+    end_time     = models.DateTimeField(validators=[validate_future_date])
+    is_cancelled = models.BooleanField(default=False)
+    is_featured  = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'projects_project'
         indexes  = [
-            models.Index(fields=['status']),
+            models.Index(fields=['is_cancelled']),
             models.Index(fields=['category']),
             models.Index(fields=['-created_at']),
         ]
@@ -69,10 +66,19 @@ class Project(TimeStampedModel):
         return self.title
 
     @property
+    def status(self):
+        if self.is_cancelled:
+            return self.Status.CANCELLED
+        now = timezone.now()
+        if now < self.start_time:
+            return self.Status.PENDING
+        if now <= self.end_time:
+            return self.Status.RUNNING
+        return self.Status.COMPLETED
+
+    @property
     def total_donated(self):
-        return self.donations.aggregate(
-            total=models.Sum('amount')
-        )['total'] or 0
+        return self.donations.aggregate(total=models.Sum('amount'))['total'] or 0
 
     @property
     def donation_percentage(self):
