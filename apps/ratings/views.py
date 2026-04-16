@@ -7,10 +7,12 @@ from django.shortcuts import get_object_or_404
 from .models import Rating
 from .serializers import RatingSerializer , RatingListSerializer
 from .filters import RatingFilter
-from apps.common.pagination import StandardPagination
+from apps.common.pagination import StandardPagination , SmallPagination
 from apps.projects.models import Project
+from django.db.models import Avg, Count
+from rest_framework.permissions import AllowAny
 
-
+# CREATE RATING
 class RatingCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -40,7 +42,7 @@ class RatingCreateView(APIView):
             status=status.HTTP_201_CREATED
         )
 
-
+# UPDATE RATING
 class RatingUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -69,7 +71,7 @@ class RatingUpdateView(APIView):
             },
             status=status.HTTP_200_OK
         )
-
+# GET RATINGS FOR A PROJECT
 class ProjectRatingsListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -87,3 +89,71 @@ class ProjectRatingsListView(APIView):
         serializer = RatingListSerializer(paginated, many=True, context={'request': request})
 
         return paginator.get_paginated_response(serializer.data)
+
+# GET TOP RATED PROJECTS
+class TopRatedProjectsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        projects = (
+            Project.objects
+            .annotate(
+                average_rating=Avg('ratings__value'),
+                ratings_count=Count('ratings')
+            )
+            .filter(ratings_count__gt=0)
+            .order_by('-average_rating')
+            .values('id', 'title', 'average_rating', 'ratings_count')[:5]
+        )
+
+        return Response(projects)
+    
+
+# GET RATING SUMMARY FOR A PROJECT
+class ProjectRatingSummaryView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+
+        queryset = Rating.objects.filter(project=project)
+
+        stats = queryset.aggregate(
+            average=Avg('value'),
+            total=Count('id')
+        )
+
+        distribution_qs = (
+            queryset
+            .values('value')
+            .annotate(count=Count('id'))
+        )
+
+        distribution = {str(i): 0 for i in range(1, 6)}
+
+        for item in distribution_qs:
+            distribution[str(item['value'])] = item['count']
+
+        return Response({
+            "project_id": project.id,
+            "average_rating": round(stats['average'], 2) if stats['average'] else 0,
+            "total_ratings": stats['total'],
+            "distribution": distribution
+        })    
+    
+class RecentRatingsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        queryset = Rating.objects.select_related('user', 'project').order_by('-created_at')
+
+        paginator = SmallPagination()
+        paginated = paginator.paginate_queryset(queryset, request)
+
+        serializer = RatingListSerializer(
+            paginated,
+            many=True,
+            context={'request': request}
+        )
+
+        return paginator.get_paginated_response(serializer.data)    
