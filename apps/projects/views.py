@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from apps.common.pagination import StandardPagination
 from .models import Project
 from .serializers import ProjectSerializer
+from apps.comments.models import Comments
+from apps.comments.serializers import CommentDetailSerializer
 from django.db.models import Avg, Count, Q
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -55,6 +57,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def comments(self, request, pk=None):
+        project = self.get_object()
+        
+        comments = Comments.objects.filter(
+            project=project,
+            parent__isnull=True
+        ).select_related('author').prefetch_related('replies').order_by('-created_at')
+        
+        serializer = CommentDetailSerializer(comments, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         project = self.get_object()
@@ -77,7 +91,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project.status = Project.Status.CANCELLED
         project.save(update_fields=['status'])
         return Response({'message': 'Project cancelled successfully'})
-
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def top_rated(self, request):
