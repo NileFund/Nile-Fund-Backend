@@ -11,12 +11,15 @@ from .serializers import DonationSerializer
 from .filters import DonationFilter
 from apps.common.pagination import StandardPagination, SmallPagination
 from apps.projects.models import Project
+from django.db import transaction
 
 
 # CREATE DONATION
 class DonationCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    # to prevent Racing Condition
+    @transaction.atomic
     def post(self, request):
         serializer = DonationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
