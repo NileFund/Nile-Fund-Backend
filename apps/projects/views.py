@@ -1,8 +1,11 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.common.pagination import StandardPagination
+from .models import Project, Tag
+from .serializers import ProjectSerializer, TagSerializer
+from django.db.models import Avg, Count
 from .models import Project
 from .serializers import ProjectSerializer
 from django.db.models import Avg, Count, Q
@@ -97,6 +100,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def latest(self, request):
+        projects = Project.objects.order_by('-created_at')[:5]
         projects = (
             Project.objects
             .select_related('owner', 'category')
@@ -108,6 +112,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def featured(self, request):
+        projects = Project.objects.filter(is_featured=True)[:5]
         projects = (
             Project.objects
             .select_related('owner', 'category')
@@ -116,3 +121,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
+
+
+class TagListView(generics.ListAPIView):
+    queryset = Tag.objects.all().order_by('name')
+    serializer_class = TagSerializer
+    permission_classes = [permissions.AllowAny]

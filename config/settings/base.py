@@ -20,6 +20,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'corsheaders',
     'cloudinary_storage',
     'cloudinary',
     'rest_framework',
@@ -44,6 +45,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # Middleware 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

@@ -5,4 +5,7 @@ from . import views
 router = DefaultRouter()
 router.register('', views.ProjectViewSet, basename='projects')
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('tags/', views.TagListView.as_view(), name='tag-list'),
+    path('', include(router.urls)),
+]
