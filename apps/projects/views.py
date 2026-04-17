@@ -1,10 +1,10 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.common.pagination import StandardPagination
-from .models import Project
-from .serializers import ProjectSerializer
+from .models import Project, Tag
+from .serializers import ProjectSerializer, TagSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -54,3 +54,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project.status = Project.Status.CANCELLED
         project.save(update_fields=['status'])
         return Response({'message': 'Project cancelled successfully'})
+
+
+class TagListView(generics.ListAPIView):
+    queryset = Tag.objects.all().order_by('name')
+    serializer_class = TagSerializer
+    permission_classes = [permissions.AllowAny]
