@@ -1,89 +1,129 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status , permissions
-from rest_framework.permissions import AllowAny
-from apps.accounts.models import User
-from .serializers import DonationSerializer
-from .models import Donation
-from .filters import DonationFilter
-from apps.common.pagination import StandardPagination , SmallPagination
+from rest_framework import status, permissions
 from django.shortcuts import get_object_or_404
-from apps.projects.models import Project
-from django.db.models import Sum , F, Value
+
+from django.db.models import Sum, F, Value
 from django.db.models.functions import Concat
 
-# create Donation
+from .models import Donation
+from .serializers import DonationSerializer
+from .filters import DonationFilter
+from apps.common.pagination import StandardPagination, SmallPagination
+from apps.projects.models import Project
+from django.db import transaction
+
+
+# CREATE DONATION
 class DonationCreateView(APIView):
-     permission_classes = [permissions.IsAuthenticated]
-     def post(self, request):
+    permission_classes = [permissions.IsAuthenticated]
+
+    # to prevent Racing Condition
+    @transaction.atomic
+    def post(self, request):
         serializer = DonationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         donation = serializer.save(donor=request.user)
 
         return Response(
             {
                 "message": "Donation created successfully",
-                "data": DonationSerializer(donation).data
+                "data": DonationSerializer(
+                    donation,
+                    context={'request': request}
+                ).data
             },
             status=status.HTTP_201_CREATED
         )
- # List Donation
- 
-class DonationListView(APIView): 
- permission_classes = [permissions.IsAuthenticated]
- def get(self, request):
+
+
+# LIST ALL DONATIONS
+class DonationListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
         donations = Donation.objects.select_related('donor', 'project').all().order_by('-created_at')
 
-        donation_filter = DonationFilter(request.GET, queryset=donations)
-        donations = donation_filter.qs
+        donations = DonationFilter(request.GET, queryset=donations).qs
 
         paginator = StandardPagination()
         paginated = paginator.paginate_queryset(donations, request)
 
-        serializer = DonationSerializer(paginated, many=True)
+        serializer = DonationSerializer(
+            paginated,
+            many=True,
+            context={'request': request}
+        )
+
         return paginator.get_paginated_response(serializer.data)
- 
-# My Donations
-class MyDonationsView(APIView):
-     permission_classes=[permissions.IsAuthenticated]
-     def get(self, request):
-        user = request.user
-        donations = Donation.objects.filter(donor=user).select_related('project').order_by('-created_at')
 
-        donation_filter = DonationFilter(request.GET, queryset=donations)
-        donations = donation_filter.qs
+
+# MY DONATIONS
+class MyDonationsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        donations = Donation.objects.filter(
+            donor=request.user
+        ).select_related('project').order_by('-created_at')
+
+        donations = DonationFilter(request.GET, queryset=donations).qs
 
         paginator = StandardPagination()
         paginated = paginator.paginate_queryset(donations, request)
 
-        serializer = DonationSerializer(paginated, many=True)
-        return paginator.get_paginated_response(serializer.data)  
+        serializer = DonationSerializer(
+            paginated,
+            many=True,
+            context={'request': request}
+        )
 
-# Project Donations
+        return paginator.get_paginated_response(serializer.data)
+
+
+# PROJECT DONATIONS
 class ProjectDonationsView(APIView):
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, project_id):
         project = get_object_or_404(Project, id=project_id)
-        donations = Donation.objects.filter(project=project).order_by('-created_at')
 
-        donation_filter = DonationFilter(request.GET, queryset=donations)
-        donations = donation_filter.qs
+        donations = Donation.objects.filter(project=project).select_related('donor').order_by('-created_at')
+
+        donations = DonationFilter(request.GET, queryset=donations).qs
 
         paginator = StandardPagination()
         paginated = paginator.paginate_queryset(donations, request)
 
-        serializer = DonationSerializer(paginated, many=True)
-        return paginator.get_paginated_response(serializer.data)   
+        serializer = DonationSerializer(
+            paginated,
+            many=True,
+            context={'request': request}
+        )
 
- # Donation Detail
+        return paginator.get_paginated_response(serializer.data)
+
+
+# DONATION DETAIL
 class DonationDetailView(APIView):
-    permission_classes=[permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, donation_id):
-        donation = get_object_or_404(Donation, id=donation_id)
-        serializer = DonationSerializer(donation)
+        donation = get_object_or_404(
+            Donation.objects.select_related('donor', 'project'),
+            id=donation_id
+        )
+
+        serializer = DonationSerializer(
+            donation,
+            context={'request': request}
+        )
+
         return Response(serializer.data)
 
-  # project donations summary
+
+# PROJECT SUMMARY
 class ProjectDonationSummaryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -100,9 +140,10 @@ class ProjectDonationSummaryView(APIView):
             "total_donated": total,
             "remaining": project.total_target - total,
             "percentage": (total / project.total_target * 100) if project.total_target else 0
-        })       
-    
-  # Top Donors for a project
+        })
+
+
+# TOP DONORS
 class TopDonorsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -111,32 +152,43 @@ class TopDonorsView(APIView):
 
         donors = (
             Donation.objects.filter(project=project)
-            .annotate(
-                email=F('donor__email'),
-                full_name=Concat(
-                    F('donor__first_name'),
-                    Value(' '),
-                    F('donor__last_name')
-                )
+            .values(
+                'donor__email',
+                'donor__first_name',
+                'donor__last_name',
+                'donor__profile_picture'
             )
-            .values('email', 'full_name')
             .annotate(total=Sum('amount'))
             .order_by('-total')[:5]
         )
 
-        return Response(donors)
-    
-# Recent Donations
+        data = [
+            {
+                "email": d["donor__email"],
+                "full_name": f"{d['donor__first_name']} {d['donor__last_name']}",
+                "profile_picture": d["donor__profile_picture"],
+                "total": d["total"]
+            }
+            for d in donors
+        ]
+
+        return Response(data)
+
+
+# RECENT DONATIONS
 class RecentDonationsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        donations = Donation.objects.all().order_by('-created_at')
+        donations = Donation.objects.select_related('donor', 'project').all().order_by('-created_at')
 
         paginator = SmallPagination()
         paginated = paginator.paginate_queryset(donations, request)
 
-        serializer = DonationSerializer(paginated, many=True)
-        return paginator.get_paginated_response(serializer.data) 
-     
+        serializer = DonationSerializer(
+            paginated,
+            many=True,
+            context={'request': request}
+        )
 
+        return paginator.get_paginated_response(serializer.data)

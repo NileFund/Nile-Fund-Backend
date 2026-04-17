@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from apps.common.pagination import StandardPagination
 from .models import Project, Tag
 from .serializers import ProjectSerializer, TagSerializer
-
+from django.db.models import Avg, Count
 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
@@ -54,6 +54,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project.status = Project.Status.CANCELLED
         project.save(update_fields=['status'])
         return Response({'message': 'Project cancelled successfully'})
+
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def top_rated(self, request):
+        projects = (
+            Project.objects
+            .annotate(
+                avg_rating=Avg('ratings__value'),
+                ratings_count=Count('ratings')
+            )
+            .filter(ratings_count__gt=0)
+            .order_by('-avg_rating')[:5]
+        )
+        serializer = self.get_serializer(projects, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def latest(self, request):
+        projects = Project.objects.order_by('-created_at')[:5]
+        serializer = self.get_serializer(projects, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def featured(self, request):
+        projects = Project.objects.filter(is_featured=True)[:5]
+        serializer = self.get_serializer(projects, many=True)
+        return Response(serializer.data)
 
 
 class TagListView(generics.ListAPIView):

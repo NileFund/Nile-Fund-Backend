@@ -1,5 +1,6 @@
 from .base import *  
 from decouple import config
+import os
 
 SECRET_KEY = 'django-insecure-%dh*gef#-z6m^)jhy58(@7zlk)%91exs%4v*-o7u5@b5fcat(s'
 DEBUG       = True
@@ -32,6 +33,8 @@ STORAGES = {
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
