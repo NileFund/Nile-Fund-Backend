@@ -6,6 +6,9 @@ from apps.common.pagination import StandardPagination
 from .models import Project, Tag
 from .serializers import ProjectSerializer, TagSerializer
 from django.db.models import Avg, Count
+from .models import Project
+from .serializers import ProjectSerializer
+from django.db.models import Avg, Count, Q
 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
@@ -27,6 +30,29 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if category_id:
             qs = qs.filter(category_id=category_id)
 
+        featured = self.request.query_params.get('featured')
+        if featured is not None:
+            qs = qs.filter(is_featured=featured.lower() == 'true')
+
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search) |
+                Q(details__icontains=search) |
+                Q(category__name__icontains=search) |
+                Q(tags__name__icontains=search)
+            ).distinct()
+
+        ordering = self.request.query_params.get('ordering')
+        if ordering == 'rating':
+            qs = qs.annotate(avg_rating=Avg('ratings__value')).order_by('-avg_rating')
+        elif ordering == 'popular':
+            qs = qs.annotate(ratings_count=Count('ratings')).order_by('-ratings_count')
+        elif ordering == 'oldest':
+            qs = qs.order_by('created_at')
+        else:
+            qs = qs.order_by('-created_at')
+
         return qs
 
     def perform_create(self, serializer):
@@ -47,7 +73,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         if project.donation_percentage >= 25:
             return Response(
-                {'message': 'Cannot cancel — donations have reached 25% or more of the target'},
+                {'message': 'Cannot cancel, donations have reached 25% or more of the target'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -60,6 +86,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def top_rated(self, request):
         projects = (
             Project.objects
+            .select_related('owner', 'category')
+            .prefetch_related('tags', 'pictures')
             .annotate(
                 avg_rating=Avg('ratings__value'),
                 ratings_count=Count('ratings')
@@ -73,12 +101,24 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def latest(self, request):
         projects = Project.objects.order_by('-created_at')[:5]
+        projects = (
+            Project.objects
+            .select_related('owner', 'category')
+            .prefetch_related('tags', 'pictures')
+            .order_by('-created_at')[:5]
+        )
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def featured(self, request):
         projects = Project.objects.filter(is_featured=True)[:5]
+        projects = (
+            Project.objects
+            .select_related('owner', 'category')
+            .prefetch_related('tags', 'pictures')
+            .filter(is_featured=True)[:5]
+        )
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
 
