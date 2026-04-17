@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import UserRegistrationSerializer, UserProfileSerializer
+from .serializers import UserRegistrationSerializer, UserProfileSerializer, DeleteAccountSerializer
 
 User = get_user_model()
 
@@ -97,3 +97,30 @@ class LogoutView(views.APIView):
                 {"error": "Invalid token or already logged out."}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
+
+class DeleteAccountView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        serializer = DeleteAccountSerializer(data=request.data, context={'request': request})
+        
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.is_active = False
+        user.save()
+
+        try:
+            refresh_token = request.data.get("refresh")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+        except Exception:
+            pass
+
+        return Response(
+            {"message": "Account has been successfully deactivated."},
+            status=status.HTTP_204_NO_CONTENT
+        )
