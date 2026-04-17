@@ -53,3 +53,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'profile_picture', 'birthdate', 'facebook_profile', 'country'
         ]
         read_only_fields = ['email']
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+
+    def validate_password(self, value):
+        user = self.context['request'].user
+        
+        if not user.check_password(value):
+            raise serializers.ValidationError("Incorrect password. Account deletion failed.")
+        
+        return value
