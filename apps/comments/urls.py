@@ -8,5 +8,3 @@ router.register('', views.CommentsViewSet, basename='comments')
 urlpatterns = [
     path('', include(router.urls)),
 ]
-
-

@@ -28,11 +28,3 @@ class Comments(TimeStampedModel):
     class Meta:
         db_table = 'comments_comment'
         indexes  = [models.Index(fields=['project', 'parent'])]
-
-    def clean(self):
-        if self.parent and self.parent.parent_id is not None:
-            raise ValidationError('Replies to replies are not allowed.')
-
-    def __str__(self):
-        label = 'Reply' if self.parent_id else 'Comment'
-        return f'{label} by {self.author.email} on "{self.project.title}"'

@@ -3,10 +3,11 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from .models import Comments
 from .serializers import CommentsSerializer
 
-
 class CommentsViewSet(viewsets.ModelViewSet):
-    queryset = Comments.objects.all()
     serializer_class = CommentsSerializer
+    
+    def get_queryset(self):
+        return Comments.objects.select_related('author', 'project', 'parent').all()
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -24,10 +25,13 @@ class CommentsViewSet(viewsets.ModelViewSet):
         else:
             return [permissions.AllowAny()]
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
     class DeletePermission(BasePermission):
         def has_object_permission(self, request, view, obj):
             return (
-                obj.user == request.user or
+                obj.author == request.user or
                 obj.project.owner == request.user or
                 request.user.is_staff or
                 request.user.is_superuser
@@ -37,4 +41,4 @@ class CommentsViewSet(viewsets.ModelViewSet):
         def has_object_permission(self, request, view, obj):
             if request.method in SAFE_METHODS:
                 return True
-            return obj.user == request.user
+            return obj.author == request.user
