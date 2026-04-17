@@ -27,7 +27,7 @@ class ProjectReport(TimeStampedModel):
 
 class CommentReport(TimeStampedModel):
     comment = models.ForeignKey(
-        'comments.Comment',
+        'comments.Comments',
         on_delete=models.CASCADE,
         related_name='reports',
     )

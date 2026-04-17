@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.common.models import TimeStampedModel
 from apps.common.validators import validate_not_in_past, validate_future_date
@@ -51,7 +52,7 @@ class Project(TimeStampedModel):
         choices=Status.choices,
         default=Status.PENDING,
     )
-    is_featured = models.BooleanField(default=False)   
+    is_featured = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'projects_project'
@@ -65,14 +66,23 @@ class Project(TimeStampedModel):
         if self.start_time and self.end_time and self.end_time <= self.start_time:
             raise ValidationError({'end_time': 'End time must be after start time.'})
 
+    def save(self, *args, **kwargs):
+        if self.status != self.Status.CANCELLED:
+            now = timezone.now()
+            if now < self.start_time:
+                self.status = self.Status.PENDING
+            elif now <= self.end_time:
+                self.status = self.Status.RUNNING
+            else:
+                self.status = self.Status.COMPLETED
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
 
     @property
     def total_donated(self):
-        return self.donations.aggregate(
-            total=models.Sum('amount')
-        )['total'] or 0
+        return self.donations.aggregate(total=models.Sum('amount'))['total'] or 0
 
     @property
     def donation_percentage(self):

@@ -9,8 +9,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
 
-from .serializers import UserRegistrationSerializer, UserProfileSerializer
+from .serializers import UserRegistrationSerializer, UserProfileSerializer, DeleteAccountSerializer
 
 User = get_user_model()
 
@@ -28,8 +29,8 @@ class RegisterView(views.APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             
-            # Frontend (React)
-            activation_link = f"http://localhost:5173/activate/{uid}/{token}/"
+            # Frontend: fixed the hared codded http://localhost:5173 , Dynamically pulled from settings!
+            activation_link = f"{settings.FRONTEND_URL}/activate/{uid}/{token}/"
             
             message = f"Hi {user.first_name},\n\nPlease click on the link below to activate your account:\n{activation_link}\n\nThis link will expire in 24 hours."
             
@@ -68,6 +69,15 @@ class UserProfileView(views.APIView):
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def put(self, request):
+        serializer = UserProfileSerializer(instance=request.user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LogoutView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -88,3 +98,30 @@ class LogoutView(views.APIView):
                 {"error": "Invalid token or already logged out."}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
+
+class DeleteAccountView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        serializer = DeleteAccountSerializer(data=request.data, context={'request': request})
+        
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.is_active = False
+        user.save()
+
+        try:
+            refresh_token = request.data.get("refresh")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+        except Exception:
+            pass
+
+        return Response(
+            {"message": "Account has been successfully deactivated."},
+            status=status.HTTP_204_NO_CONTENT
+        )
