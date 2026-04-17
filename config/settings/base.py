@@ -27,6 +27,7 @@ THIRD_PARTY_APPS = [
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
     'django_rest_passwordreset',
+    'corsheaders',
 ]
 
 LOCAL_APPS = [
@@ -47,6 +48,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
