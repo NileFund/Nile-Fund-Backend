@@ -5,7 +5,7 @@ from django.db import models
 from apps.common.models import TimeStampedModel
 
 
-class Comment(TimeStampedModel):
+class Comments(TimeStampedModel):
     project = models.ForeignKey(
         'projects.Project',
         on_delete=models.CASCADE,

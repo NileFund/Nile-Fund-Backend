@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from .models import ProjectReport, CommentReport
 from .serializers import ProjectReportSerializer, CommentReportSerializer
 from apps.projects.models import Project
-from apps.comments.models import Comment
+from apps.comments.models import Comments
 
 
 class ReportProjectView(APIView):
@@ -38,7 +38,7 @@ class ReportCommentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, comment_id):
-        comment = get_object_or_404(Comment, id=comment_id)
+        comment = get_object_or_404(Comments, id=comment_id)
 
         serializer = CommentReportSerializer(
             data=request.data,
