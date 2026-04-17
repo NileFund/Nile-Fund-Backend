@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView 
 from .serializers import MyTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -14,4 +14,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), 
     path('me/', UserProfileView.as_view(), name='user-profile'),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
+    # add password reset routes for frontend
+    path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]

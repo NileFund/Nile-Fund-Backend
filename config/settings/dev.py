@@ -1,5 +1,6 @@
 from .base import *  
 from decouple import config
+import os
 
 #  Security 
 SECRET_KEY = 'django-insecure-%dh*gef#-z6m^)jhy58(@7zlk)%91exs%4v*-o7u5@b5fcat(s'
@@ -39,3 +40,6 @@ STORAGES = {
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Pull the URL from .env, but default to localhost just in case
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
