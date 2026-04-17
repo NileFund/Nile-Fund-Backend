@@ -89,24 +89,6 @@ class ProjectRatingsListView(APIView):
         serializer = RatingListSerializer(paginated, many=True, context={'request': request})
 
         return paginator.get_paginated_response(serializer.data)
-
-# GET TOP RATED PROJECTS
-class TopRatedProjectsView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        projects = (
-            Project.objects
-            .annotate(
-                average_rating=Avg('ratings__value'),
-                ratings_count=Count('ratings')
-            )
-            .filter(ratings_count__gt=0)
-            .order_by('-average_rating')
-            .values('id', 'title', 'average_rating', 'ratings_count')[:5]
-        )
-
-        return Response(projects)
     
 
 # GET RATING SUMMARY FOR A PROJECT

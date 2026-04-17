@@ -3,6 +3,10 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register('', views.ProjectViewSet, basename='projects')
+router.register('', views.CommentsViewSet, basename='comments')
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
+
