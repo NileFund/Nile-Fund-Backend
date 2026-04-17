@@ -9,23 +9,19 @@ class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
 
     def get_permissions(self):
-        if self.action == 'create':
-            # POST: authenticated users
+        if self.request.method == 'POST':
             return [permissions.IsAuthenticated()]
-        elif self.action == 'destroy':
-            # DELETE: comment owner, project owner, or admin
+        elif self.request.method == 'DELETE':
             return [
                 permissions.IsAuthenticated(),
                 self.DeletePermission()
             ]
-        elif self.action in ['update', 'partial_update']:
-            # PATCH/PUT: comment owner
+        elif self.request.method in ['PUT', 'PATCH']:
             return [
                 permissions.IsAuthenticated(),
                 self.EditPermission()
             ]
         else:
-            # GET: everyone
             return [permissions.AllowAny()]
 
     class DeletePermission(BasePermission):
