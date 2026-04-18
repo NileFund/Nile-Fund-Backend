@@ -13,8 +13,8 @@ from .views import (
 urlpatterns = [
     path('', DonationCreateView.as_view(), name='donation-create'),
     path('all/', DonationListView.as_view(), name='donation-list'),
-    path('my/', MyDonationsView.as_view(), name='my-donations'),        # ← move up
-    path('recent/', RecentDonationsView.as_view(), name='recent-donations'),  # ← move up
+    path('my/', MyDonationsView.as_view(), name='my-donations'),        
+    path('recent/', RecentDonationsView.as_view(), name='recent-donations'),
     path('<int:donation_id>/', DonationDetailView.as_view(), name='donation-detail'),
     
     #path('projects/<int:project_id>/donations/', ProjectDonationsView.as_view(), name='project-donations'),
