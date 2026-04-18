@@ -1,0 +1,19 @@
+meta {
+  name: Report Project
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/reports/projects/:project_id/report/
+  body: json
+  auth: inherit
+}
+
+params:path {
+  project_id: 1
+}
+
+body:json {
+  "reason": "Inappropriate content"
+}

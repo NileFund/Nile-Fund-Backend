@@ -1,0 +1,20 @@
+meta {
+  name: Edit Profile
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/accounts/me/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "first_name": "Shahd",
+  "last_name": "Mostafa",
+  "phone": "01098765432",
+  "birthdate": "2000-01-01",
+  "country": "Egypt",
+  "facebook_profile": "https://facebook.com/user"
+}
