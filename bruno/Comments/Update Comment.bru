@@ -1,0 +1,15 @@
+meta {
+  name: Update Comment
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/comments/1/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "body": "Updated comment content."
+}

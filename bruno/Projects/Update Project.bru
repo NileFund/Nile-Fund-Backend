@@ -1,0 +1,18 @@
+meta {
+  name: Update Project
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/projects/1/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "title": "Updated Project Title",
+  "details": "Updated details about the project.",
+  "total_target": 10000,
+  "category": 1
+}

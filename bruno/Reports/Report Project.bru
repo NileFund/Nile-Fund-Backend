@@ -5,15 +5,11 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/reports/projects/:project_id/report/
+  url: {{baseUrl}}/reports/projects/1/report/
   body: json
   auth: inherit
 }
 
-params:path {
-  project_id: 1
-}
-
 body:json {
-  "reason": "Inappropriate content"
+  "reason": "Suspicious activity detected."
 }
