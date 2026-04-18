@@ -30,6 +30,12 @@ STORAGES = {
     },
 }
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
+
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -56,5 +62,6 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
+    "http://localhost:5174", 
     'http://localhost:3000',
 ]

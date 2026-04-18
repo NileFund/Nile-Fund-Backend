@@ -47,8 +47,9 @@ class RegisterView(views.APIView):
                 )
             except Exception as e:
                 # This catches email sending errors and triggers a transaction rollback
+                print(f"REGISTRATION ERROR: {str(e)}")
                 return Response(
-                    {"error": "Failed to send activation email. Please check your email address or try again later."},
+                    {"error": f"Failed to send activation email: {str(e)}"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
