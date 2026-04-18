@@ -12,6 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, DeleteAccountSerializer
+from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -107,8 +108,29 @@ class DeleteAccountView(views.APIView):
     def delete(self, request):
         serializer = DeleteAccountSerializer(data=request.data, context={'request': request})
         
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            # Check if this is our 10-attempt lockout trigger
+            if 'action' in e.detail and 'terminate_session' in e.detail['action']:
+                # Blacklist the token
+                try:
+                    refresh_token = request.data.get("refresh")
+                    if refresh_token:
+                        token = RefreshToken(refresh_token)
+                        token.blacklist()
+                except Exception:
+                    pass
+                
+                # Send the 403 Forbidden back to React
+                return Response(
+                    {"action": "terminate_session", "message": "Security limit reached."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            # If it's a normal wrong password, raise the standard error
+            raise e
 
+        # Standard deletion logic (runs only if password is correct)
         user = request.user
         user.is_active = False
         user.save()
