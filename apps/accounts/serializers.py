@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.db.models import Sum
+from apps.donations.models import Donation
 
 User = get_user_model()
 
@@ -46,13 +48,49 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    # 1. Define the custom read-only fields matching the React frontend
+    projectsSupported = serializers.SerializerMethodField()
+    totalContribution = serializers.SerializerMethodField()
+    impactLevel = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
             'id', 'first_name', 'last_name', 'email', 'phone', 
-            'profile_picture', 'birthdate', 'facebook_profile', 'country'
+            'profile_picture', 'birthdate', 'facebook_profile', 'country',
+            'projectsSupported', 'totalContribution', 'impactLevel' # <-- Add them here
         ]
         read_only_fields = ['email']
+
+    # 2. Logic to count unique projects supported
+    def get_projectsSupported(self, obj):
+        try:
+            # Note: If your team named the foreign key 'donor' instead of 'user', 
+            # simply change `user=obj` to `donor=obj` below.
+            return Donation.objects.filter(user=obj).values('project').distinct().count()
+        except Exception:
+            return 0
+
+    # 3. Logic to sum the total money donated
+    def get_totalContribution(self, obj):
+        try:
+            total = Donation.objects.filter(user=obj).aggregate(total_sum=Sum('amount'))['total_sum']
+            return total if total is not None else 0
+        except Exception:
+            return 0
+
+    # 4. Logic to determine Impact Level based on total
+    def get_impactLevel(self, obj):
+        total = self.get_totalContribution(obj)
+        
+        if total >= 50000:
+            return "Visionary"
+        elif total >= 10000:
+            return "Champion"
+        elif total > 0:
+            return "Supporter"
+        
+        return "Newcomer"
 
 
 class DeleteAccountSerializer(serializers.Serializer):
@@ -62,6 +100,19 @@ class DeleteAccountSerializer(serializers.Serializer):
         user = self.context['request'].user
         
         if not user.check_password(value):
+            # Increment the counter
+            user.failed_delete_attempts += 1
+            user.save(update_fields=['failed_delete_attempts'])
+            
+            # If they hit 10 attempts, trigger the lockout
+            if user.failed_delete_attempts >= 10:
+                raise serializers.ValidationError({"action": "terminate_session"})
+                
             raise serializers.ValidationError("Incorrect password. Account deletion failed.")
         
+        # If password is correct, reset the counter
+        if user.failed_delete_attempts > 0:
+            user.failed_delete_attempts = 0
+            user.save(update_fields=['failed_delete_attempts'])
+            
         return value

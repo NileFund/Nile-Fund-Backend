@@ -46,6 +46,8 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         help_text="Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
     )   
     is_staff   = models.BooleanField(default=False)
+
+    failed_delete_attempts = models.IntegerField(default=0)
     
     email_verification_sent_at = models.DateTimeField(null=True, blank=True)
 
