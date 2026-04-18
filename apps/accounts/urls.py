@@ -15,6 +15,4 @@ urlpatterns = [
     path('me/', UserProfileView.as_view(), name='user-profile'),
     path('me/delete/', DeleteAccountView.as_view(), name='delete-account'),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
-    # add password reset routes for frontend
-    path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]
