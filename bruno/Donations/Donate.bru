@@ -1,0 +1,16 @@
+meta {
+  name: Donate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/donations/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "project": 1,
+  "amount": 100
+}

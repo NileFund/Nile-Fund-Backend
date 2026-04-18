@@ -1,0 +1,15 @@
+meta {
+  name: Report Comment
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/reports/comments/1/report/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "reason": "Inappropriate language."
+}
