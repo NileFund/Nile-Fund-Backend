@@ -134,8 +134,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my_campaigns(self, request):
+        projects = (
+            Project.objects
+            .filter(owner=request.user)
+            .select_related('owner', 'category')
+            .prefetch_related('tags', 'pictures')
+            .order_by('-created_at')
+        )
 
+        page = self.paginate_queryset(projects)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
+        serializer = self.get_serializer(projects, many=True)
+        return Response(serializer.data)
+    
 class TagListView(generics.ListAPIView):
     queryset = Tag.objects.all().order_by('name')
     serializer_class = TagSerializer
