@@ -1,0 +1,15 @@
+meta {
+  name: Update Rating
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/ratings/projects/1/ratings/update/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "value": 4
+}

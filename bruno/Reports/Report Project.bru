@@ -1,0 +1,15 @@
+meta {
+  name: Report Project
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/reports/projects/1/report/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "reason": "Suspicious activity detected."
+}

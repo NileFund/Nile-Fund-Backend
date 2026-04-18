@@ -1,0 +1,15 @@
+meta {
+  name: Logout
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/accounts/logout/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  "refresh": "your-refresh-token-here"
+}

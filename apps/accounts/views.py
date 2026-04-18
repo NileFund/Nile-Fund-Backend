@@ -13,6 +13,7 @@ from django.conf import settings
 
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, DeleteAccountSerializer
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
 
 User = get_user_model()
 
@@ -22,26 +23,34 @@ class RegisterView(views.APIView):
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            
-            current_site = get_current_site(request)
-            mail_subject = 'Activate your Nile Fund account'
-            
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            
-            # Frontend: fixed the hared codded http://localhost:5173 , Dynamically pulled from settings!
-            activation_link = f"{settings.FRONTEND_URL}/activate/{uid}/{token}/"
-            
-            message = f"Hi {user.first_name},\n\nPlease click on the link below to activate your account:\n{activation_link}\n\nThis link will expire in 24 hours."
-            
-            email = EmailMessage(mail_subject, message, to=[user.email])
-            email.send()
-            
-            return Response(
-                {"message": "Registration successful! Please check your email to activate your account."},
-                status=status.HTTP_201_CREATED
-            )
+            try:
+                with transaction.atomic():
+                    user = serializer.save()
+                    
+                    current_site = get_current_site(request)
+                    mail_subject = 'Activate your Nile Fund account'
+                    
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    token = default_token_generator.make_token(user)
+                    
+                    # Frontend: fixed the hared codded http://localhost:5173 , Dynamically pulled from settings!
+                    activation_link = f"{settings.FRONTEND_URL}/activate/{uid}/{token}/"
+                    
+                    message = f"Hi {user.first_name},\n\nPlease click on the link below to activate your account:\n{activation_link}\n\nThis link will expire in 24 hours."
+                    
+                    email = EmailMessage(mail_subject, message, to=[user.email])
+                    email.send()
+                    
+                return Response(
+                    {"message": "Registration successful! Please check your email to activate your account."},
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                # This catches email sending errors and triggers a transaction rollback
+                return Response(
+                    {"error": "Failed to send activation email. Please check your email address or try again later."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
