@@ -2,7 +2,7 @@ import os
 from .base import *
 from decouple import config
 import dj_database_url
-
+import cloudinary
 
 # SECURITY
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
@@ -61,6 +61,14 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ['CLOUDINARY_API_SECRET'],
     'SECURE': True, 
 }
+
+cloudinary.config(
+    cloud_name=os.environ['CLOUDINARY_CLOUD_NAME'],
+    api_key=os.environ['CLOUDINARY_API_KEY'],
+    api_secret=os.environ['CLOUDINARY_API_SECRET'],
+    secure=True
+)
+
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
