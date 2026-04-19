@@ -16,13 +16,13 @@ DJANGO_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
 ]
 
 THIRD_PARTY_APPS = [
     'corsheaders',
     'cloudinary_storage',
     'cloudinary',
+    'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
     'rest_framework_simplejwt.token_blacklist',
@@ -45,6 +45,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # Middleware 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -118,6 +119,6 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': os.getenv("SECRET_KEY", "django-insecure-fallback"),
+    'SIGNING_KEY': os.getenv("DJANGO_SECRET_KEY", "django-insecure-fallback"),
     'AUTH_HEADER_TYPES': ('Bearer',), 
 }

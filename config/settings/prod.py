@@ -12,6 +12,7 @@ ALLOWED_HOSTS = [
     ".railway.app",
     ".up.railway.app",
     "localhost",
+    "fundegypt.vercel.app", 
 ]
 
 
@@ -52,6 +53,24 @@ EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 DEFAULT_FROM_EMAIL = f'FundEgypt <{EMAIL_HOST_USER}>'
 
+# CLOUDINARY
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ['CLOUDINARY_CLOUD_NAME'],
+    'API_KEY': os.environ['CLOUDINARY_API_KEY'],
+    'API_SECRET': os.environ['CLOUDINARY_API_SECRET'],
+    'SECURE': True, 
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# STATIC FILES & MEDIA
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # SECURITY HEADERS
 SECURE_SSL_REDIRECT = True
@@ -68,19 +87,5 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
-# STATIC FILES
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# CLOUDINARY
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ['CLOUDINARY_CLOUD_NAME'],
-    'API_KEY': os.environ['CLOUDINARY_API_KEY'],
-    'API_SECRET': os.environ['CLOUDINARY_API_SECRET'],
-}
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-print('STORAGE:', DEFAULT_FILE_STORAGE)
-print('CLOUDINARY:', CLOUDINARY_STORAGE)
