@@ -49,7 +49,7 @@ class RegisterView(views.APIView):
                 user = serializer.save()
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 token = default_token_generator.make_token(user)
-                activation_link = f"{settings.FRONTEND_URL}/activate/{uid}/{token}/"
+                activation_link = f"{settings.FRONTEND_URL}/activate/{uid}/{token}"
 
             # Send email — if it fails, registration still succeeds
             send_activation_email(user.email, user.first_name, activation_link)
