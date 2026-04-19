@@ -52,10 +52,10 @@ CSRF_TRUSTED_ORIGINS = [
 # EMAIL (Gmail SMTP)
 # =========================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp-relay.brevo.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.environ['EMAIL_USER']
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_PASS']
 DEFAULT_FROM_EMAIL = f'FundEgypt <{EMAIL_HOST_USER}>'
