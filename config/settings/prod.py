@@ -4,9 +4,7 @@ from decouple import config
 import dj_database_url
 
 
-# =========================
 # SECURITY
-# =========================
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG = False
 
@@ -17,9 +15,7 @@ ALLOWED_HOSTS = [
 ]
 
 
-# =========================
 # DATABASE (Supabase)
-# =========================
 DATABASES = {
     'default': dj_database_url.parse(
         os.environ["DATABASE_URL"],
@@ -29,9 +25,7 @@ DATABASES = {
 }
 
 
-# =========================
 # CORS / CSRF
-# =========================
 FRONTEND_URL = os.environ.get(
     "FRONTEND_URL",
     "https://fundegypt.vercel.app"
@@ -48,9 +42,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-# =========================
 # EMAIL (Gmail SMTP)
-# =========================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp-relay.brevo.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
@@ -61,9 +53,7 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 DEFAULT_FROM_EMAIL = f'FundEgypt <{EMAIL_HOST_USER}>'
 
 
-# =========================
 # SECURITY HEADERS
-# =========================
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -78,8 +68,16 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
-# =========================
 # STATIC FILES
-# =========================
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# CLOUDINARY
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ['CLOUDINARY_CLOUD_NAME'],
+    'API_KEY': os.environ['CLOUDINARY_API_KEY'],
+    'API_SECRET': os.environ['CLOUDINARY_API_SECRET'],
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
