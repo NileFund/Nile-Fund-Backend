@@ -61,6 +61,8 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ['CLOUDINARY_API_SECRET'],
     'SECURE': True, 
 }
+print('CLOUD NAME:', os.environ.get('CLOUDINARY_CLOUD_NAME'))
+print('API KEY:', os.environ.get('CLOUDINARY_API_KEY'))
 
 cloudinary.config(
     cloud_name=os.environ['CLOUDINARY_CLOUD_NAME'],
